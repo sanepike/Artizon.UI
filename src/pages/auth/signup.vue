@@ -85,11 +85,14 @@
 <script lang="ts">
   import { defineComponent, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { authApi } from '../../services/api'
+  import { useAuthStore } from '../../stores/auth'
 
   export default defineComponent({
     name: 'SignupPage',
     setup () {
       const router = useRouter()
+      const auth = useAuthStore()
       const loading = ref(false)
       const error = ref('')
 
@@ -157,25 +160,24 @@
         error.value = ''
 
         try {
-          const response = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
+          const data = await authApi.signup({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            password: formData.password,
+            user_type: formData.user_type as 'Vendor' | 'Customer',
           })
 
-          const data = await response.json()
-
-          if (response.status === 201) {
-            localStorage.setItem('access_token', data.access_token)
-            await router.push('/dashboard') // Redirect to home page
+          if (data?.access_token) {
+            auth.setToken(data.access_token)
+            await auth.fetchUserProfile()
+            await router.push('/dashboard')
           } else {
-            error.value
-              = data.message || 'Failed to create account. Please try again.'
+            error.value = 'Failed to create account. Please try again.'
           }
-        } catch {
-          error.value = 'An error occurred. Please try again later.'
+        } catch (error_: any) {
+          error.value
+            = error_?.message || 'An error occurred. Please try again later.'
         } finally {
           loading.value = false
         }
@@ -200,6 +202,8 @@
   justify-content: center;
   padding: 1rem;
   background: #f5f5f5;
+  /* Ensure light appearance on devices in dark mode */
+  color-scheme: light;
 }
 
 .auth-card {
@@ -240,11 +244,31 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: #fff;
+  color: #333;
+  caret-color: #333;
 }
 
 .form-group input.error,
 .form-group select.error {
   border-color: #dc3545;
+}
+
+/* Placeholder color for better visibility on mobile */
+.form-group input::placeholder {
+  color: #888;
+  opacity: 1;
+}
+
+/* Fix mobile dark mode/autofill making text white on white bg */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+select:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: #333 !important;
+  box-shadow: 0 0 0px 1000px #fff inset;
+  transition: background-color 9999s ease-out 0s;
 }
 
 .error-text {
