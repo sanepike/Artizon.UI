@@ -66,12 +66,12 @@ router.beforeEach(async (to, from, next) => {
 
   // Handle routes that require customer role
   if (to.meta.requiresCustomer && !auth.isCustomer) {
-    return next("/");
+    return next("/dashboard");
   }
 
   // Handle routes that require vendor role
   if (to.meta.requiresVendor && !auth.isVendor) {
-    return next("/");
+    return next("/dashboard");
   }
 
   next();

@@ -94,7 +94,7 @@
         try {
           const data = await authApi.login(formData.email, formData.password)
           auth.setToken(data.access_token)
-          await router.push('/') // Redirect to home page
+          await router.push('/dashboard') // Redirect to home page
         } catch {
           error.value = 'An error occurred. Please try again later.'
         } finally {

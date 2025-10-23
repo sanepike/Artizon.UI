@@ -169,7 +169,7 @@
 
           if (response.status === 201) {
             localStorage.setItem('access_token', data.access_token)
-            await router.push('/') // Redirect to home page
+            await router.push('/dashboard') // Redirect to home page
           } else {
             error.value
               = data.message || 'Failed to create account. Please try again.'
