@@ -8,7 +8,7 @@
         :class="{ error: errors.name }"
         required
         type="text"
-      >
+      />
       <span v-if="errors.name" class="error-text">{{ errors.name }}</span>
     </div>
 
@@ -35,7 +35,7 @@
         required
         step="0.01"
         type="number"
-      >
+      />
       <span v-if="errors.price" class="error-text">{{ errors.price }}</span>
     </div>
 
@@ -48,13 +48,13 @@
         multiple
         type="file"
         @change="handleImageChange"
-      >
+      />
       <span v-if="errors.images" class="error-text">{{ errors.images }}</span>
     </div>
 
     <div v-if="imageUrls.length > 0" class="image-preview">
       <div v-for="(url, index) in imageUrls" :key="index" class="preview-item">
-        <img alt="Product preview" :src="url">
+        <img alt="Product preview" :src="url" />
         <button class="remove-btn" type="button" @click="removeImage(index)">
           &times;
         </button>
@@ -73,121 +73,129 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, reactive, ref } from 'vue'
+import { defineComponent, onMounted, reactive, ref } from "vue";
 
-  export default defineComponent({
-    name: 'ProductForm',
-    props: {
-      product: {
-        type: Object,
-        default: null,
-      },
+export default defineComponent({
+  name: "ProductForm",
+  props: {
+    product: {
+      type: Object as () => Record<string, any> | null,
+      default: () => null,
     },
-    emits: ['submit', 'cancel'],
-    setup (props, { emit }) {
-      const loading = ref(false)
-      const imageFiles = ref<File[]>([])
-      const imageUrls = ref<string[]>([])
+  },
+  emits: ["submit", "cancel"],
+  setup(props, { emit }) {
+    const loading = ref(false);
+    const imageFiles = ref<File[]>([]);
+    const imageUrls = ref<string[]>([]);
 
-      const formData = reactive({
-        name: '',
-        description: '',
-        price: 0,
-      })
+    const formData = reactive({
+      name: "",
+      description: "",
+      price: 0,
+    });
 
-      const errors = reactive({
-        name: '',
-        description: '',
-        price: '',
-        images: '',
-      })
+    const errors = reactive({
+      name: "",
+      description: "",
+      price: "",
+      images: "",
+    });
 
-      const handleImageChange = (event: Event) => {
-        const input = event.target as HTMLInputElement
-        if (!input.files?.length) return
+    const handleImageChange = (event: Event) => {
+      const input = event.target as HTMLInputElement;
+      if (!input.files?.length) return;
 
-        const newFiles = Array.from(input.files)
-        imageFiles.value = [...imageFiles.value, ...newFiles]
+      const newFiles = Array.from(input.files);
+      imageFiles.value = [...imageFiles.value, ...newFiles];
 
-        // Create preview URLs
-        for (const file of newFiles) {
-          const url = URL.createObjectURL(file)
-          imageUrls.value.push(url)
-        }
+      // Create preview URLs
+      for (const file of newFiles) {
+        const url = URL.createObjectURL(file);
+        imageUrls.value.push(url);
+      }
+    };
+
+    const removeImage = (index: number) => {
+      if (
+        !imageUrls.value ||
+        imageUrls.value.length === 0 ||
+        index > imageUrls.value.length
+      )
+        return;
+      const url = imageUrls.value[index];
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+      imageUrls.value.splice(index, 1);
+      imageFiles.value.splice(index, 1);
+    };
+
+    const validateForm = () => {
+      let isValid = true;
+      errors.name = "";
+      errors.description = "";
+      errors.price = "";
+      errors.images = "";
+
+      if (!formData.name.trim()) {
+        errors.name = "Product name is required";
+        isValid = false;
       }
 
-      const removeImage = (index: number) => {
-        if (!imageUrls.value || imageUrls.value.length === 0 || index > imageUrls.value.length) return
-        URL.revokeObjectURL(imageUrls.value[index])
-        imageUrls.value.splice(index, 1)
-        imageFiles.value.splice(index, 1)
+      if (!formData.description.trim()) {
+        errors.description = "Description is required";
+        isValid = false;
       }
 
-      const validateForm = () => {
-        let isValid = true
-        errors.name = ''
-        errors.description = ''
-        errors.price = ''
-        errors.images = ''
-
-        if (!formData.name.trim()) {
-          errors.name = 'Product name is required'
-          isValid = false
-        }
-
-        if (!formData.description.trim()) {
-          errors.description = 'Description is required'
-          isValid = false
-        }
-
-        if (!formData.price || formData.price <= 0) {
-          errors.price = 'Please enter a valid price'
-          isValid = false
-        }
-
-        if (!props.product && imageFiles.value.length === 0) {
-          errors.images = 'At least one image is required'
-          isValid = false
-        }
-
-        return isValid
+      if (!formData.price || formData.price <= 0) {
+        errors.price = "Please enter a valid price";
+        isValid = false;
       }
 
-      const handleSubmit = () => {
-        if (!validateForm()) return
-
-        const submitData = new FormData()
-        submitData.append('name', formData.name)
-        submitData.append('description', formData.description)
-        submitData.append('price', formData.price.toString())
-
-        for (const file of imageFiles.value) {
-          submitData.append('images', file)
-        }
-
-        emit('submit', submitData)
+      if (!props.product && imageFiles.value.length === 0) {
+        errors.images = "At least one image is required";
+        isValid = false;
       }
 
-      onMounted(() => {
-        if (props.product) {
-          formData.name = props.product.name
-          formData.description = props.product.description
-          formData.price = props.product.price
-          imageUrls.value = props.product.image_urls
-        }
-      })
+      return isValid;
+    };
 
-      return {
-        formData,
-        errors,
-        loading,
-        imageUrls,
-        handleImageChange,
-        removeImage,
-        handleSubmit,
+    const handleSubmit = () => {
+      if (!validateForm()) return;
+
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("description", formData.description);
+      submitData.append("price", formData.price.toString());
+
+      for (const file of imageFiles.value) {
+        submitData.append("images", file);
       }
-    },
-  })
+
+      emit("submit", submitData);
+    };
+
+    onMounted(() => {
+      if (props.product) {
+        formData.name = props.product.name;
+        formData.description = props.product.description;
+        formData.price = props.product.price;
+        imageUrls.value = props.product.image_urls;
+      }
+    });
+
+    return {
+      formData,
+      errors,
+      loading,
+      imageUrls,
+      handleImageChange,
+      removeImage,
+      handleSubmit,
+    };
+  },
+});
 </script>
 
 <style scoped>

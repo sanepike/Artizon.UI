@@ -271,7 +271,7 @@ export default defineComponent({
         const orderIndex = orders.value.findIndex(
           (o) => o.id === selectedOrder.value?.id
         );
-        if (orderIndex !== -1) {
+        if (orderIndex !== -1 && orders.value[orderIndex]) {
           orders.value[orderIndex].status = selectedStatus.value;
         }
 

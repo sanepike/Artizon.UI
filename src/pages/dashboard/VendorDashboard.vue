@@ -31,7 +31,7 @@
       <h2>Your Products</h2>
       <div class="products-grid">
         <div v-for="product in products" :key="product.id" class="product-card">
-          <img :alt="product.name" :src="product.images[0]?.url">
+          <img :alt="product.name" :src="product.images[0]?.url" />
           <div class="product-info">
             <h3>{{ product.name }}</h3>
             <div class="text-body-2">
@@ -60,126 +60,115 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import Modal from '../../components/Modal.vue'
-  import { ordersApi, productsApi } from '../../services/api'
-  import ProductForm from './ProductForm.vue'
+import type { Product } from "../../types";
 
-  interface Image {
-    is_primary: boolean
-    url: string
-  }
+import { defineComponent, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
-  interface Product {
-    id: number
-    name: string
-    description: string
-    price: number
-    images: Image[]
-    vendor_id: number
-  }
+import Modal from "../../components/Modal.vue";
+import { ordersApi, productsApi } from "../../services/api";
+import ProductForm from "./ProductForm.vue";
 
-  export default defineComponent({
-    name: 'VendorDashboard',
-    components: {
-      Modal,
-      ProductForm,
-    },
-    setup () {
-      const router = useRouter()
-      const products = ref<Product[]>([])
-      const totalProducts = ref(0)
-      const totalOrders = ref(0)
-      const totalRevenue = ref(0)
-      const showAddProductModal = ref(false)
-      const editingProduct = ref<Product | null>(null)
+export default defineComponent({
+  name: "VendorDashboard",
+  components: {
+    Modal,
+    ProductForm,
+  },
+  setup() {
+    const router = useRouter();
+    const products = ref<Product[]>([]);
+    const totalProducts = ref(0);
+    const totalOrders = ref(0);
+    const totalRevenue = ref(0);
+    const showAddProductModal = ref(false);
+    const editingProduct = ref<Product | null>(null);
 
-      const fetchProducts = async () => {
-        try {
-          const response = await productsApi.getProducts()
-          products.value = response.products
-          totalProducts.value = response.products.length
-        } catch (error) {
-          console.error('Error fetching products:', error)
-        }
+    const fetchProducts = async () => {
+      try {
+        const response = await productsApi.getProducts();
+        products.value = response.products;
+        totalProducts.value = response.products.length;
+      } catch (error) {
+        console.error("Error fetching products:", error);
       }
+    };
 
-      const fetchVendorOrders = async () => {
-        try {
-          const response = await ordersApi.getVendorOrders(1, 100)
-          const orders = response.orders || []
+    const fetchVendorOrders = async () => {
+      try {
+        const response = await ordersApi.getVendorOrders(1, 100);
+        const orders = response.orders || [];
 
-          // Calculate total orders count
-          totalOrders.value = orders.length
+        // Calculate total orders count
+        totalOrders.value = orders.length;
 
-          // Calculate total revenue from all orders
-          totalRevenue.value = orders.reduce(
-            (sum: number, order: any) => sum + (order.total_amount || 0),
-            0,
-          )
-        } catch (error) {
-          console.error('Error fetching vendor orders:', error)
-        }
+        // Calculate total revenue from all orders
+        totalRevenue.value = orders.reduce(
+          (sum: number, order: any) => sum + (order.total_amount || 0),
+          0
+        );
+      } catch (error) {
+        console.error("Error fetching vendor orders:", error);
       }
+    };
 
-      const editProduct = (product: Product) => {
-        editingProduct.value = product
-        showAddProductModal.value = true
+    const editProduct = (product: Product) => {
+      editingProduct.value = product;
+      showAddProductModal.value = true;
+    };
+
+    const deleteProduct = async (productId: number) => {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+
+      try {
+        await productsApi.deleteProduct(productId);
+        await fetchProducts();
+      } catch (error) {
+        console.error("Error deleting product:", error);
       }
+    };
 
-      const deleteProduct = async (productId: number) => {
-        if (!confirm('Are you sure you want to delete this product?')) return
-
-        try {
-          await productsApi.deleteProduct(productId)
-          await fetchProducts()
-        } catch (error) {
-          console.error('Error deleting product:', error)
-        }
+    const handleProductSubmit = async (formData: FormData) => {
+      try {
+        await (editingProduct.value
+          ? productsApi.updateProduct(editingProduct.value.id, formData)
+          : productsApi.createProduct(formData));
+        await fetchProducts();
+        closeProductModal();
+      } catch (error) {
+        console.error("Error saving product:", error);
       }
+    };
 
-      const handleProductSubmit = async (formData: FormData) => {
-        try {
-          await (editingProduct.value
-            ? productsApi.updateProduct(editingProduct.value.id, formData)
-            : productsApi.createProduct(formData))
-          await fetchProducts()
-          closeProductModal()
-        } catch (error) {
-          console.error('Error saving product:', error)
-        }
-      }
+    const closeProductModal = () => {
+      showAddProductModal.value = false;
+      editingProduct.value = null;
+    };
 
-      const closeProductModal = () => {
-        showAddProductModal.value = false
-        editingProduct.value = null
-      }
+    const goToOrders = () => {
+      router.push("/orders/vendor");
+    };
 
-      const goToOrders = () => {
-        router.push('/orders/vendor')
-      }
+    onMounted(() => {
+      fetchProducts();
+      fetchVendorOrders();
+    });
 
-      onMounted(() => {
-        fetchProducts()
-        fetchVendorOrders()
-      })
-
-      return {
-        products,
-        totalProducts,
-        totalOrders,
-        totalRevenue,
-        showAddProductModal,
-        editingProduct,
-        editProduct,
-        deleteProduct,
-        handleProductSubmit,
-        closeProductModal,
-        goToOrders,
-      }
-    },
-  })
+    return {
+      products,
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      showAddProductModal,
+      editingProduct,
+      editProduct,
+      deleteProduct,
+      handleProductSubmit,
+      closeProductModal,
+      goToOrders,
+    };
+  },
+});
 </script>
 
 <style scoped>

@@ -9,7 +9,7 @@
       <!-- Left side: Product List -->
       <section class="products-section">
         <div class="search-bar">
-          <input v-model="search" placeholder="Search products...">
+          <input v-model="search" placeholder="Search products..." />
         </div>
 
         <div v-if="loading" class="loading-state">
@@ -62,7 +62,7 @@
                 :alt="item.name"
                 class="cart-item-image"
                 :src="item.image_urls?.[0] || '/placeholder.png'"
-              >
+              />
               <div class="cart-item-details">
                 <h4>{{ item.name }}</h4>
                 <p class="cart-item-price">₹{{ item.price.toFixed(2) }}</p>
@@ -99,148 +99,137 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, onMounted, ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import ProductCard from '../../components/ProductCard.vue'
-  import { productsApi } from '../../services/api'
-  import { useAuthStore } from '../../stores/auth'
-  import { useCartStore } from '../../stores/cart'
+import type { Product } from "../../types";
 
-  interface Image {
-    is_primary: boolean
-    url: string
-  }
+import { computed, defineComponent, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
-  interface Product {
-    id: number
-    name: string
-    description: string
-    price: number
-    images: Image[]
-    vendor_id: number
-  }
+import ProductCard from "../../components/ProductCard.vue";
+import { productsApi } from "../../services/api";
+import { useAuthStore } from "../../stores/auth";
+import { useCartStore } from "../../stores/cart";
 
-  export default defineComponent({
-    name: 'CustomerDashboard',
-    components: {
-      ProductCard,
-    },
-    setup () {
-      const router = useRouter()
-      const auth = useAuthStore()
-      const cartStore = useCartStore()
+export default defineComponent({
+  name: "CustomerDashboard",
+  components: {
+    ProductCard,
+  },
+  setup() {
+    const router = useRouter();
+    const auth = useAuthStore();
+    const cartStore = useCartStore();
 
-      const products = ref<Product[]>([])
-      const search = ref('')
-      const page = ref(1)
-      const totalPages = ref(1)
-      const loading = ref(false)
-      const isCartCollapsed = ref(false)
+    const products = ref<Product[]>([]);
+    const search = ref("");
+    const page = ref(1);
+    const totalPages = ref(1);
+    const loading = ref(false);
+    const isCartCollapsed = ref(false);
 
-      const user = computed(() => auth.user)
-      const cart = computed(() => cartStore)
+    const user = computed(() => auth.user);
+    const cart = computed(() => cartStore);
 
-      const filteredProducts = computed(() => {
-        if (!search.value) return products.value
-        const searchLower = search.value.toLowerCase()
-        return products.value.filter(
-          p =>
-            p.name.toLowerCase().includes(searchLower)
-            || p.description.toLowerCase().includes(searchLower),
-        )
-      })
+    const filteredProducts = computed(() => {
+      if (!search.value) return products.value;
+      const searchLower = search.value.toLowerCase();
+      return products.value.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchLower) ||
+          p.description.toLowerCase().includes(searchLower)
+      );
+    });
 
-      const fetchProducts = async () => {
-        loading.value = true
-        try {
-          const response = await productsApi.getProducts(page.value, 10)
-          products.value = response.products
-          totalPages.value = response.total_pages
-        } catch (error) {
-          console.error('Error fetching products:', error)
-        } finally {
-          loading.value = false
-        }
+    const fetchProducts = async () => {
+      loading.value = true;
+      try {
+        const response = await productsApi.getProducts(page.value, 10);
+        products.value = response.products;
+        totalPages.value = response.total_pages;
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        loading.value = false;
       }
+    };
 
-      const addToCart = (product: Product) => {
-        const imageUrl = product.images?.[0]?.url || '/placeholder.png'
-        cartStore.add({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image_urls: [imageUrl],
-        })
+    const addToCart = (product: Product) => {
+      const imageUrl = product.images?.[0]?.url || "/placeholder.png";
+      cartStore.add({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_urls: [imageUrl],
+      });
+    };
+
+    const removeFromCart = (productId: number) => {
+      cartStore.remove(productId);
+    };
+
+    const increaseQuantity = (productId: number) => {
+      const item = cartStore.items.find((item) => item.id === productId);
+      if (item) {
+        cartStore.updateQuantity(productId, item.quantity + 1);
       }
+    };
 
-      const removeFromCart = (productId: number) => {
-        cartStore.remove(productId)
+    const decreaseQuantity = (productId: number) => {
+      const item = cartStore.items.find((item) => item.id === productId);
+      if (item && item.quantity > 1) {
+        cartStore.updateQuantity(productId, item.quantity - 1);
       }
+    };
 
-      const increaseQuantity = (productId: number) => {
-        const item = cartStore.items.find(item => item.id === productId)
-        if (item) {
-          cartStore.updateQuantity(productId, item.quantity + 1)
-        }
+    const toggleCart = () => {
+      isCartCollapsed.value = !isCartCollapsed.value;
+    };
+
+    const goToCheckout = () => {
+      router.push("/cart");
+    };
+
+    const goToOrders = () => {
+      router.push("/orders/customer");
+    };
+
+    const prevPage = () => {
+      if (page.value > 1) {
+        page.value--;
+        fetchProducts();
       }
+    };
 
-      const decreaseQuantity = (productId: number) => {
-        const item = cartStore.items.find(item => item.id === productId)
-        if (item && item.quantity > 1) {
-          cartStore.updateQuantity(productId, item.quantity - 1)
-        }
+    const nextPage = () => {
+      if (page.value < totalPages.value) {
+        page.value++;
+        fetchProducts();
       }
+    };
 
-      const toggleCart = () => {
-        isCartCollapsed.value = !isCartCollapsed.value
-      }
+    onMounted(fetchProducts);
 
-      const goToCheckout = () => {
-        router.push('/cart')
-      }
-
-      const goToOrders = () => {
-        router.push('/orders/customer')
-      }
-
-      const prevPage = () => {
-        if (page.value > 1) {
-          page.value--
-          fetchProducts()
-        }
-      }
-
-      const nextPage = () => {
-        if (page.value < totalPages.value) {
-          page.value++
-          fetchProducts()
-        }
-      }
-
-      onMounted(fetchProducts)
-
-      return {
-        products,
-        search,
-        page,
-        totalPages,
-        loading,
-        isCartCollapsed,
-        user,
-        cart,
-        filteredProducts,
-        addToCart,
-        removeFromCart,
-        increaseQuantity,
-        decreaseQuantity,
-        toggleCart,
-        goToCheckout,
-        goToOrders,
-        prevPage,
-        nextPage,
-      }
-    },
-  })
+    return {
+      products,
+      search,
+      page,
+      totalPages,
+      loading,
+      isCartCollapsed,
+      user,
+      cart,
+      filteredProducts,
+      addToCart,
+      removeFromCart,
+      increaseQuantity,
+      decreaseQuantity,
+      toggleCart,
+      goToCheckout,
+      goToOrders,
+      prevPage,
+      nextPage,
+    };
+  },
+});
 </script>
 
 <style scoped>
