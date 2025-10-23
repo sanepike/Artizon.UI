@@ -91,7 +91,7 @@ export const authApi = {
     last_name: string
     email: string
     password: string
-    user_type: 'Vendor' | 'Customer'
+    user_type: 'vendor' | 'customer'
   }) =>
     apiClient('/auth/signup', {
       method: 'POST',

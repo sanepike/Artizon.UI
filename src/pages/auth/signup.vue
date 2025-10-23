@@ -11,7 +11,7 @@
             :class="{ error: errors.first_name }"
             required
             type="text"
-          />
+          >
           <span v-if="errors.first_name" class="error-text">{{
             errors.first_name
           }}</span>
@@ -24,7 +24,7 @@
             :class="{ error: errors.last_name }"
             required
             type="text"
-          />
+          >
           <span v-if="errors.last_name" class="error-text">{{
             errors.last_name
           }}</span>
@@ -37,7 +37,7 @@
             :class="{ error: errors.email }"
             required
             type="email"
-          />
+          >
           <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
         </div>
         <div class="form-group">
@@ -48,7 +48,7 @@
             :class="{ error: errors.password }"
             required
             type="password"
-          />
+          >
           <span v-if="errors.password" class="error-text">{{
             errors.password
           }}</span>
@@ -62,8 +62,8 @@
             required
           >
             <option value="">Select account type</option>
-            <option value="Customer">Customer</option>
-            <option value="Vendor">Vendor</option>
+            <option value="customer">Customer</option>
+            <option value="vendor">Vendor</option>
           </select>
           <span v-if="errors.user_type" class="error-text">{{
             errors.user_type
@@ -83,115 +83,115 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
-import { authApi } from "../../services/api";
-import { useAuthStore } from "../../stores/auth";
+  import { defineComponent, reactive, ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { authApi } from '../../services/api'
+  import { useAuthStore } from '../../stores/auth'
 
-export default defineComponent({
-  name: "SignupPage",
-  setup() {
-    const router = useRouter();
-    const auth = useAuthStore();
-    const loading = ref(false);
-    const error = ref("");
+  export default defineComponent({
+    name: 'SignupPage',
+    setup () {
+      const router = useRouter()
+      const auth = useAuthStore()
+      const loading = ref(false)
+      const error = ref('')
 
-    const formData = reactive({
-      first_name: "",
-      last_name: "",
-      email: "",
-      password: "",
-      user_type: "",
-    });
+      const formData = reactive({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        user_type: '',
+      })
 
-    const errors = reactive({
-      first_name: "",
-      last_name: "",
-      email: "",
-      password: "",
-      user_type: "",
-    });
+      const errors = reactive({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        user_type: '',
+      })
 
-    const validateForm = () => {
-      let isValid = true;
-      // Reset all errors
-      for (const key of Object.keys(errors)) {
-        errors[key as keyof typeof errors] = "";
-      }
-
-      if (!formData.first_name.trim()) {
-        errors.first_name = "First name is required";
-        isValid = false;
-      }
-
-      if (!formData.last_name.trim()) {
-        errors.last_name = "Last name is required";
-        isValid = false;
-      }
-
-      if (!formData.email) {
-        errors.email = "Email is required";
-        isValid = false;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        errors.email = "Please enter a valid email";
-        isValid = false;
-      }
-
-      if (!formData.password) {
-        errors.password = "Password is required";
-        isValid = false;
-      } else if (formData.password.length < 6) {
-        errors.password = "Password must be at least 6 characters";
-        isValid = false;
-      }
-
-      if (!formData.user_type) {
-        errors.user_type = "Please select an account type";
-        isValid = false;
-      }
-
-      return isValid;
-    };
-
-    const handleSignup = async () => {
-      if (!validateForm()) return;
-
-      loading.value = true;
-      error.value = "";
-
-      try {
-        const data = await authApi.signup({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          password: formData.password,
-          user_type: formData.user_type as "Vendor" | "Customer",
-        });
-
-        if (data?.access_token) {
-          auth.setToken(data.access_token);
-          await auth.fetchUserProfile();
-          await router.push("/dashboard");
-        } else {
-          error.value = "Failed to create account. Please try again.";
+      const validateForm = () => {
+        let isValid = true
+        // Reset all errors
+        for (const key of Object.keys(errors)) {
+          errors[key as keyof typeof errors] = ''
         }
-      } catch (error_: any) {
-        error.value =
-          error_?.message || "An error occurred. Please try again later.";
-      } finally {
-        loading.value = false;
-      }
-    };
 
-    return {
-      formData,
-      errors,
-      loading,
-      error,
-      handleSignup,
-    };
-  },
-});
+        if (!formData.first_name.trim()) {
+          errors.first_name = 'First name is required'
+          isValid = false
+        }
+
+        if (!formData.last_name.trim()) {
+          errors.last_name = 'Last name is required'
+          isValid = false
+        }
+
+        if (!formData.email) {
+          errors.email = 'Email is required'
+          isValid = false
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          errors.email = 'Please enter a valid email'
+          isValid = false
+        }
+
+        if (!formData.password) {
+          errors.password = 'Password is required'
+          isValid = false
+        } else if (formData.password.length < 6) {
+          errors.password = 'Password must be at least 6 characters'
+          isValid = false
+        }
+
+        if (!formData.user_type) {
+          errors.user_type = 'Please select an account type'
+          isValid = false
+        }
+
+        return isValid
+      }
+
+      const handleSignup = async () => {
+        if (!validateForm()) return
+
+        loading.value = true
+        error.value = ''
+
+        try {
+          const data = await authApi.signup({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            password: formData.password,
+            user_type: formData.user_type as 'vendor' | 'customer',
+          })
+
+          if (data?.access_token) {
+            auth.setToken(data.access_token)
+            await auth.fetchUserProfile()
+            await router.push('/dashboard')
+          } else {
+            error.value = 'Failed to create account. Please try again.'
+          }
+        } catch (error_: any) {
+          error.value
+            = error_?.message || 'An error occurred. Please try again later.'
+        } finally {
+          loading.value = false
+        }
+      }
+
+      return {
+        formData,
+        errors,
+        loading,
+        error,
+        handleSignup,
+      }
+    },
+  })
 </script>
 
 <style scoped>
