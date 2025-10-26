@@ -86,7 +86,7 @@ export default defineComponent({
 
     const fetchProducts = async () => {
       try {
-        const response = await productsApi.getProducts();
+        const response = await productsApi.getMyProducts();
         products.value = response.products;
         totalProducts.value = response.products.length;
       } catch (error) {

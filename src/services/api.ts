@@ -13,10 +13,9 @@ export function pingBackend (): void {
       cache: 'no-store',
       mode: 'cors',
       signal: controller.signal,
+    }).finally(() => {
+      window.clearTimeout(timeoutId)
     })
-      .finally(() => {
-        window.clearTimeout(timeoutId)
-      })
   } catch {
     console.log('Backend ping failed')
   }
@@ -107,6 +106,9 @@ export const authApi = {
 export const productsApi = {
   getProducts: (page = 1, limit = 10) =>
     apiClient(`/products?page=${page}&limit=${limit}`),
+
+  getMyProducts: (page = 1, limit = 10) =>
+    apiClient(`/products/my?page=${page}&limit=${limit}`),
 
   getProduct: (id: number) => apiClient(`/products/${id}`),
 
