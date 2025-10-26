@@ -108,7 +108,9 @@ export const productsApi = {
     apiClient(`/products?page=${page}&limit=${limit}`),
 
   getMyProducts: (page = 1, limit = 10) =>
-    apiClient(`/products/my?page=${page}&limit=${limit}`),
+    apiClient(`/products/my?page=${page}&limit=${limit}`, {
+      requiresAuth: true,
+    }),
 
   getProduct: (id: number) => apiClient(`/products/${id}`),
 
