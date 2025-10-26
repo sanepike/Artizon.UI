@@ -29,7 +29,18 @@
 
     <section class="products-section">
       <h2>Your Products</h2>
-      <div class="products-grid">
+      <div v-if="products.length === 0" class="empty-state">
+        <div class="empty-card">
+          <div aria-hidden="true" class="empty-emoji">🛒</div>
+          <h3>No products yet</h3>
+          <p class="empty-copy">
+            You haven't added any products to your store. Start by creating your
+            first product.
+          </p>
+        </div>
+      </div>
+
+      <div v-else class="products-grid">
         <div v-for="product in products" :key="product.id" class="product-card">
           <img :alt="product.name" :src="product.images[0]?.url" />
           <div class="product-info">
@@ -254,6 +265,28 @@ export default defineComponent({
 .products-section h2 {
   margin-bottom: 1rem;
   color: #333;
+}
+
+.empty-state {
+  margin-top: 1rem;
+}
+
+.empty-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-copy {
+  color: #555;
+  margin: 0.25rem 0 1rem;
 }
 
 .products-grid {
